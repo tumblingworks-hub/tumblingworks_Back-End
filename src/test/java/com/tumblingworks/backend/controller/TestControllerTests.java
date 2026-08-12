@@ -22,4 +22,20 @@ class TestControllerTests {
 				.andExpect(jsonPath("$.message").value("Tumblingworks Back-End is running"))
 				.andExpect(jsonPath("$.timestamp").exists());
 	}
+
+	@Test
+	void returnsTrueForBlankValueUsingKotlinUtility() throws Exception {
+		mockMvc.perform(get("/api/test/blank").param("value", "   "))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.value").value("   "))
+				.andExpect(jsonPath("$.blank").value(true));
+	}
+
+	@Test
+	void returnsFalseForNonBlankValueUsingKotlinUtility() throws Exception {
+		mockMvc.perform(get("/api/test/blank").param("value", "tumblingworks"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.value").value("tumblingworks"))
+				.andExpect(jsonPath("$.blank").value(false));
+	}
 }
