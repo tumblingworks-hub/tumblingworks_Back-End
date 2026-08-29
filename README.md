@@ -21,3 +21,10 @@ Settings → Build, Execution, Deployment → Build Tools → Gradle
 
 Run → Edit Configurations → TumblingworksBackEndApplication
  : jdk-26.0.2
+
+[인터셉터 경로 설정]
+addInterceptors
+ : /api/**
+
+[CORS 설정]
+ : /api/**
