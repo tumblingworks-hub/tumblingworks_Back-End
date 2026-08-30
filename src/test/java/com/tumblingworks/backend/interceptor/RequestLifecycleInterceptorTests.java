@@ -1,16 +1,18 @@
 package com.tumblingworks.backend.interceptor;
 
+import com.tumblingworks.backend.errorlog.service.ErrorLogService;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 
 class RequestLifecycleInterceptorTests {
 
 	private final RequestLifecycleInterceptor interceptor =
-			new RequestLifecycleInterceptor();
+			new RequestLifecycleInterceptor(mock(ErrorLogService.class));
 
 	@Test
 	void startsRequestAndReturnsRequestIdHeader() {

@@ -31,6 +31,15 @@ public class TestController {
 		return new BlankCheckResponse(value, isBlank(value));
 	}
 
+	@Operation(
+			summary = "Generate a sample error",
+			description = "Throws an intentional exception to verify global exception handling and error logging."
+	)
+	@GetMapping("/error")
+	public void generateError() {
+		throw new IllegalStateException("Intentional test error");
+	}
+
 	public record TestResponse(String message, Instant timestamp) {
 	}
 

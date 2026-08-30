@@ -1,5 +1,6 @@
 package com.tumblingworks.backend.interceptor;
 
+import com.tumblingworks.backend.errorlog.service.ErrorLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -16,11 +17,16 @@ public class RequestLifecycleInterceptor implements HandlerInterceptor {
 
 	private static final Logger log =
 			LoggerFactory.getLogger(RequestLifecycleInterceptor.class);
-	private static final String REQUEST_ID_ATTRIBUTE =
+	public static final String REQUEST_ID_ATTRIBUTE =
 			RequestLifecycleInterceptor.class.getName() + ".requestId";
 	private static final String START_TIME_ATTRIBUTE =
 			RequestLifecycleInterceptor.class.getName() + ".startTime";
 	private static final String REQUEST_ID_HEADER = "X-Request-ID";
+	private final ErrorLogService errorLogService;
+
+	public RequestLifecycleInterceptor(ErrorLogService errorLogService) {
+		this.errorLogService = errorLogService;
+	}
 
 	@Override
 	public boolean preHandle(
@@ -69,6 +75,12 @@ public class RequestLifecycleInterceptor implements HandlerInterceptor {
 			Exception exception
 	) {
 		if (exception != null) {
+			errorLogService.saveSafely(
+					request,
+					response.getStatus(),
+					"UNHANDLED_EXCEPTION",
+					exception
+			);
 			log.error(
 					"[REQUEST ERROR] id={} method={} uri={} status={} durationMs={}",
 					requestId(request),
@@ -79,6 +91,12 @@ public class RequestLifecycleInterceptor implements HandlerInterceptor {
 					exception
 			);
 		} else if (response.getStatus() >= HttpServletResponse.SC_BAD_REQUEST) {
+			errorLogService.saveSafely(
+					request,
+					response.getStatus(),
+					"HTTP_" + response.getStatus(),
+					null
+			);
 			log.warn(
 					"[REQUEST ERROR] id={} method={} uri={} status={} durationMs={}",
 					requestId(request),
