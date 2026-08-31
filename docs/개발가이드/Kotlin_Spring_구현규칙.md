@@ -28,6 +28,7 @@ id 'org.jetbrains.kotlin.plugin.spring' version '2.4.10'
 
 - 재할당하지 않는 지역 변수·프로퍼티는 `val`로 선언한다.
 - 상태 변경이 비즈니스 의미를 가질 때만 `var`를 쓴다.
+- mutable collection(`MutableList` 등)과 `var`는 그 상태를 누가 소유하고 변경하는지가 분명할 때만 쓴다. 여러 곳에서 같은 mutable 객체를 주고받지 않는다.
 
 ### 최상위 함수 vs 클래스
 
@@ -59,6 +60,8 @@ fun isBlank(value: String?): Boolean = value.isNullOrBlank()
 
 Java 쪽 DTO는 이미 `record`를 쓰고 있다(`ErrorResponse`, `ErrorLogCreateRequest`, `TestController`의 내부 record들). Kotlin에서 같은 역할의 DTO를 작성하면 `data class`가 Java `record`와 동등한 선택이다.
 
+**하나의 `data class`를 Entity/값 객체/DTO 세 역할로 겸용하지 않는다.** 계층이 다르면(Controller 경계의 DTO, Service/domain의 값 객체, JPA Entity) 클래스도 나눈다 — 필드가 같아 보여도 각 계층의 계약(직렬화, 영속성, nullability)이 다르게 진화할 수 있다.
+
 ### 네이밍
 
 - 클래스는 `PascalCase`, 함수·프로퍼티는 `camelCase`, 패키지는 소문자.
@@ -67,7 +70,7 @@ Java 쪽 DTO는 이미 `record`를 쓰고 있다(`ErrorResponse`, `ErrorLogCreat
 ## 4. Nullability
 
 - Java 코드와 인터페이스가 맞닿는 지점(예: `request.getAttribute(...)`처럼 Java 서블릿 API가 돌려주는 `Object`, `ErrorLogService`가 `RequestLifecycleInterceptor.REQUEST_ID_ATTRIBUTE` 키로 조회한 값)에서는 Java platform type을 무조건 non-null로 단정하지 않는다.
-- `!!`는 null 불가능성이 외부 계약으로 증명될 때만 쓴다.
+- `!!`는 null 불가능성이 외부 계약으로 증명될 때만 쓴다. 쓸 때는 그 근거(어떤 계약이 non-null을 보장하는지)를 주석으로 남긴다 — 근거 없이 컴파일 에러를 피하려고 쓰지 않는다.
 - `Utils.kt`의 `String?` 파라미터 스타일을 따른다 — nullable 입력을 받는 함수는 파라미터 타입에 `?`를 명시한다.
 
 ## 5. Spring Bean과 의존성 주입

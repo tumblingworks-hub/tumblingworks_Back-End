@@ -16,6 +16,12 @@
 - [docs/개발가이드/Kotlin_Spring_구현규칙.md](docs/개발가이드/Kotlin_Spring_구현규칙.md) — Kotlin 코드 작성 규칙 (val/var, data class, null 처리, DI, 트랜잭션, Java 상호운용)
 - [docs/개발가이드/Java_Kotlin_혼용_배치_규칙.md](docs/개발가이드/Java_Kotlin_혼용_배치_규칙.md) — 새 코드를 Java로 쓸지 Kotlin으로 쓸지 정하는 기준
 - [docs/개발가이드/검증_테스트_기준.md](docs/개발가이드/검증_테스트_기준.md) — 테스트 스택, 계층별 테스트 방식, 빌드/검증 명령
+- [docs/개발가이드/피그마_기반_기능구현_가이드.md](docs/개발가이드/피그마_기반_기능구현_가이드.md) — Figma 화면 1개를 API로 구현하는 스텝 게이트 절차(아직 실사례 없음, 첫 사용 시 갱신 예정)
+
+## Claude Code 커맨드
+
+- `/api-doc <컨트롤러 파일 경로> [메서드명]` — [.claude/commands/api-doc.md](.claude/commands/api-doc.md). 컨트롤러의 `@Operation` description(요청/응답 필드표, 에러 응답표)과 `@Schema` example을 코드에서 자동 생성/갱신.
+- `/figma-feature <Figma URL 또는 node-id | continue | status>` — [.claude/commands/figma-feature.md](.claude/commands/figma-feature.md). Figma 기획 화면 1개를 API로 구현하는 작업을 스텝 게이트로 구동.
 
 ## 최소 안전수칙
 
