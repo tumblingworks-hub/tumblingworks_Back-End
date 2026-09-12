@@ -20,6 +20,20 @@ public class GlobalExceptionHandler {
 		this.errorLogService = errorLogService;
 	}
 
+	@ExceptionHandler(BusinessError.class)
+	public ResponseEntity<ErrorResponse> handleBusinessError(
+			BusinessError exception,
+			HttpServletRequest request
+	) {
+		return createErrorResponse(
+				request,
+				exception,
+				exception.getStatus(),
+				exception.getCode(),
+				exception.getMessage()
+		);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleValidationException(
 			MethodArgumentNotValidException exception,
