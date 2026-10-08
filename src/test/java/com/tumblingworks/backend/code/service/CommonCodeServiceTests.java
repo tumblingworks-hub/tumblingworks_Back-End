@@ -47,7 +47,8 @@ class CommonCodeServiceTests {
 	void rejectsBlankGroupKey() {
 		assertBusinessError(
 				() -> commonCodeService.createGroup(
-						new CreateCodeGroupRequest("   ", "상태", null)
+						new CreateCodeGroupRequest("   ", "상태", null),
+						null
 				),
 				"GROUP_KEY_REQUIRED"
 		);
@@ -58,7 +59,8 @@ class CommonCodeServiceTests {
 	void rejectsBlankGroupName() {
 		assertBusinessError(
 				() -> commonCodeService.createGroup(
-						new CreateCodeGroupRequest("STATUS", "", null)
+						new CreateCodeGroupRequest("STATUS", "", null),
+						null
 				),
 				"GROUP_NAME_REQUIRED"
 		);
@@ -69,7 +71,8 @@ class CommonCodeServiceTests {
 	void rejectsBlankGroupIdForDetail() {
 		assertBusinessError(
 				() -> commonCodeService.createDetail(
-						new CreateCodeDetailRequest(" ", "ACTIVE", "사용", null)
+						new CreateCodeDetailRequest(" ", "ACTIVE", "사용", null),
+						null
 				),
 				"GROUP_ID_REQUIRED"
 		);
@@ -80,7 +83,8 @@ class CommonCodeServiceTests {
 	void rejectsBlankDetailCode() {
 		assertBusinessError(
 				() -> commonCodeService.createDetail(
-						new CreateCodeDetailRequest("CMGRP1", null, "사용", null)
+						new CreateCodeDetailRequest("CMGRP1", null, "사용", null),
+						null
 				),
 				"DETAIL_CODE_REQUIRED"
 		);
@@ -91,7 +95,8 @@ class CommonCodeServiceTests {
 	void rejectsBlankDetailCodeName() {
 		assertBusinessError(
 				() -> commonCodeService.createDetail(
-						new CreateCodeDetailRequest("CMGRP1", "ACTIVE", "  ", null)
+						new CreateCodeDetailRequest("CMGRP1", "ACTIVE", "  ", null),
+						null
 				),
 				"DETAIL_CODE_NAME_REQUIRED"
 		);
@@ -130,7 +135,8 @@ class CommonCodeServiceTests {
 
 		CodeGroupResponse response = commonCodeService.updateGroup(
 				"CMGRP1",
-				new UpdateCodeGroupRequest("  상태값  ", "회원 상태", false, 3)
+				new UpdateCodeGroupRequest("  상태값  ", "회원 상태", false, 3),
+			"admin"
 		);
 
 		assertThat(response.groupKey()).isEqualTo("STATUS");
@@ -138,6 +144,7 @@ class CommonCodeServiceTests {
 		assertThat(response.description()).isEqualTo("회원 상태");
 		assertThat(response.useYn()).isFalse();
 		assertThat(response.sortOrder()).isEqualTo(3);
+		assertThat(response.updatedUserId()).isEqualTo("admin");
 	}
 
 	@Test
@@ -145,7 +152,8 @@ class CommonCodeServiceTests {
 		assertBusinessError(
 				() -> commonCodeService.updateGroup(
 						"CMGRP1",
-						new UpdateCodeGroupRequest(" ", null, true, 0)
+						new UpdateCodeGroupRequest(" ", null, true, 0),
+					"admin"
 				),
 				"GROUP_NAME_REQUIRED",
 				400
@@ -153,7 +161,8 @@ class CommonCodeServiceTests {
 		assertBusinessError(
 				() -> commonCodeService.updateGroup(
 						"CMGRP1",
-						new UpdateCodeGroupRequest("상태", null, null, 0)
+						new UpdateCodeGroupRequest("상태", null, null, 0),
+					"admin"
 				),
 				"USE_YN_REQUIRED",
 				400
@@ -161,7 +170,8 @@ class CommonCodeServiceTests {
 		assertBusinessError(
 				() -> commonCodeService.updateGroup(
 						"CMGRP1",
-						new UpdateCodeGroupRequest("상태", null, true, null)
+						new UpdateCodeGroupRequest("상태", null, true, null),
+					"admin"
 				),
 				"SORT_ORDER_REQUIRED",
 				400
@@ -178,7 +188,7 @@ class CommonCodeServiceTests {
 				.thenReturn(true);
 
 		assertBusinessError(
-				() -> commonCodeService.deleteGroup("CMGRP1"),
+				() -> commonCodeService.deleteGroup("CMGRP1", "admin"),
 				"CODE_GROUP_HAS_DETAILS",
 				409
 		);
@@ -194,9 +204,10 @@ class CommonCodeServiceTests {
 		when(codeDetailRepository.existsByGroup_GroupIdAndDeletedFlag("CMGRP1", "N"))
 				.thenReturn(false);
 
-		commonCodeService.deleteGroup("CMGRP1");
+		commonCodeService.deleteGroup("CMGRP1", "admin");
 
 		assertThat(group.getDeletedFlag()).isEqualTo("Y");
+		assertThat(group.getUpdatedUserId()).isEqualTo("admin");
 		verify(codeGroupRepository).saveAndFlush(group);
 	}
 
@@ -237,7 +248,8 @@ class CommonCodeServiceTests {
 
 		CodeDetailResponse response = commonCodeService.updateDetail(
 				"CMDTL1",
-				new UpdateCodeDetailRequest(" 활성 ", null, true, 1, "a", null, "c")
+				new UpdateCodeDetailRequest(" 활성 ", null, true, 1, "a", null, "c"),
+			"admin"
 		);
 
 		assertThat(response.detailCode()).isEqualTo("ACTIVE");
@@ -253,7 +265,8 @@ class CommonCodeServiceTests {
 		assertBusinessError(
 				() -> commonCodeService.updateDetail(
 						"CMDTL1",
-						new UpdateCodeDetailRequest("", null, true, 0, null, null, null)
+						new UpdateCodeDetailRequest("", null, true, 0, null, null, null),
+					"admin"
 				),
 				"DETAIL_CODE_NAME_REQUIRED",
 				400
@@ -267,7 +280,7 @@ class CommonCodeServiceTests {
 				.thenReturn(Optional.empty());
 
 		assertBusinessError(
-				() -> commonCodeService.deleteDetail("CMDTL9"),
+				() -> commonCodeService.deleteDetail("CMDTL9", "admin"),
 				"CODE_DETAIL_NOT_FOUND",
 				404
 		);
@@ -279,10 +292,53 @@ class CommonCodeServiceTests {
 		when(codeDetailRepository.findByCodeIdAndDeletedFlag("CMDTL1", "N"))
 				.thenReturn(Optional.of(detail));
 
-		commonCodeService.deleteDetail("CMDTL1");
+		commonCodeService.deleteDetail("CMDTL1", "admin");
 
 		assertThat(detail.getDeletedFlag()).isEqualTo("Y");
+		assertThat(detail.getUpdatedUserId()).isEqualTo("admin");
 		verify(codeDetailRepository).saveAndFlush(detail);
+	}
+
+	@Test
+	void recordsTrimmedAdminUsernameAsRegistrantOfNewGroup() {
+		when(codeGroupRepository.existsByGroupCode("STATUS")).thenReturn(false);
+		when(codeGroupRepository.saveAndFlush(any(CodeGroup.class)))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+
+		CodeGroupResponse response = commonCodeService.createGroup(
+				new CreateCodeGroupRequest("STATUS", "상태", null),
+				"  admin  "
+		);
+
+		assertThat(response.registeredUserId()).isEqualTo("admin");
+		assertThat(response.updatedUserId()).isEqualTo("admin");
+	}
+
+	@Test
+	void leavesRegistrantEmptyWhenAdminUsernameIsBlank() {
+		CodeGroup group = group("CMGRP1", "STATUS");
+		when(codeDetailRepository.existsByGroup_GroupIdAndDetailCode("CMGRP1", "ACTIVE"))
+				.thenReturn(false);
+		when(codeGroupRepository.findById("CMGRP1")).thenReturn(Optional.of(group));
+		when(codeDetailRepository.saveAndFlush(any(CodeDetail.class)))
+				.thenAnswer(invocation -> invocation.getArgument(0));
+
+		CodeDetailResponse response = commonCodeService.createDetail(
+				new CreateCodeDetailRequest("CMGRP1", "ACTIVE", "사용", null),
+				"   "
+		);
+
+		assertThat(response.registeredUserId()).isNull();
+	}
+
+	@Test
+	void rejectsAdminUsernameLongerThanColumn() {
+		assertBusinessError(
+				() -> commonCodeService.deleteDetail("CMDTL1", "a".repeat(101)),
+				"ADMIN_USERNAME_TOO_LONG",
+				400
+		);
+		verifyNoInteractions(codeGroupRepository, codeDetailRepository);
 	}
 
 	private static CodeGroup group(String groupId, String groupKey) {

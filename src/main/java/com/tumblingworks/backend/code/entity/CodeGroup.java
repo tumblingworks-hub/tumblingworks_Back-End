@@ -72,20 +72,28 @@ public class CodeGroup {
 		return new CodeGroup(groupCode, groupName, description);
 	}
 
+	public void recordRegisteredBy(String userId) {
+		this.registeredUserId = userId;
+		this.updatedUserId = userId;
+	}
+
 	public void update(
 			String groupName,
 			String description,
 			boolean useYn,
-			int sortOrder
+			int sortOrder,
+			String updatedUserId
 	) {
 		this.groupName = groupName;
 		this.description = description;
 		this.useYn = useYn;
 		this.sortOrder = sortOrder;
+		this.updatedUserId = updatedUserId;
 	}
 
-	public void markDeleted() {
+	public void markDeleted(String updatedUserId) {
 		this.deletedFlag = DeletedFlag.DELETED;
+		this.updatedUserId = updatedUserId;
 	}
 
 	@PreUpdate
@@ -123,6 +131,14 @@ public class CodeGroup {
 
 	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
+	}
+
+	public String getRegisteredUserId() {
+		return registeredUserId;
+	}
+
+	public String getUpdatedUserId() {
+		return updatedUserId;
 	}
 
 	public String getDeletedFlag() {

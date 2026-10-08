@@ -22,6 +22,8 @@ import static com.tumblingworks.backend.common.Utils.isBlank;
 @Service
 public class CommonCodeService {
 
+	private static final int ADMIN_USERNAME_MAX_LENGTH = 100;
+
 	private final CodeGroupRepository codeGroupRepository;
 	private final CodeDetailRepository codeDetailRepository;
 
@@ -34,7 +36,11 @@ public class CommonCodeService {
 	}
 
 	@Transactional
-	public CodeGroupResponse createGroup(CreateCodeGroupRequest request) {
+	public CodeGroupResponse createGroup(
+			CreateCodeGroupRequest request,
+			String adminUsername
+	) {
+		String actor = normalizeAdminUsername(adminUsername);
 		if (request == null || isBlank(request.groupKey())) {
 			throw BusinessError.badRequest(
 					"GROUP_KEY_REQUIRED",
@@ -56,18 +62,22 @@ public class CommonCodeService {
 			);
 		}
 
-		CodeGroup saved = codeGroupRepository.saveAndFlush(
-				CodeGroup.create(
-						groupKey,
-						request.groupName().trim(),
-						request.description()
-				)
+		CodeGroup group = CodeGroup.create(
+				groupKey,
+				request.groupName().trim(),
+				request.description()
 		);
+		group.recordRegisteredBy(actor);
+		CodeGroup saved = codeGroupRepository.saveAndFlush(group);
 		return CodeGroupResponse.from(saved);
 	}
 
 	@Transactional
-	public CodeDetailResponse createDetail(CreateCodeDetailRequest request) {
+	public CodeDetailResponse createDetail(
+			CreateCodeDetailRequest request,
+			String adminUsername
+	) {
+		String actor = normalizeAdminUsername(adminUsername);
 		if (request == null || isBlank(request.groupId())) {
 			throw BusinessError.badRequest(
 					"GROUP_ID_REQUIRED",
@@ -105,14 +115,14 @@ public class CommonCodeService {
 			);
 		}
 
-		CodeDetail saved = codeDetailRepository.saveAndFlush(
-				CodeDetail.create(
-						group,
-						detailCode,
-						request.detailCodeName().trim(),
-						request.description()
-				)
+		CodeDetail detail = CodeDetail.create(
+				group,
+				detailCode,
+				request.detailCodeName().trim(),
+				request.description()
 		);
+		detail.recordRegisteredBy(actor);
+		CodeDetail saved = codeDetailRepository.saveAndFlush(detail);
 		return CodeDetailResponse.from(saved);
 	}
 
@@ -133,8 +143,10 @@ public class CommonCodeService {
 	@Transactional
 	public CodeGroupResponse updateGroup(
 			String groupId,
-			UpdateCodeGroupRequest request
+			UpdateCodeGroupRequest request,
+			String adminUsername
 	) {
+		String actor = normalizeAdminUsername(adminUsername);
 		if (request == null || isBlank(request.groupName())) {
 			throw BusinessError.badRequest(
 					"GROUP_NAME_REQUIRED",
@@ -148,13 +160,15 @@ public class CommonCodeService {
 				request.groupName().trim(),
 				request.description(),
 				request.useYn(),
-				request.sortOrder()
+				request.sortOrder(),
+				actor
 		);
 		return CodeGroupResponse.from(codeGroupRepository.saveAndFlush(group));
 	}
 
 	@Transactional
-	public void deleteGroup(String groupId) {
+	public void deleteGroup(String groupId, String adminUsername) {
+		String actor = normalizeAdminUsername(adminUsername);
 		CodeGroup group = findActiveGroup(groupId);
 		if (codeDetailRepository.existsByGroup_GroupIdAndDeletedFlag(
 				group.getGroupId(),
@@ -165,7 +179,7 @@ public class CommonCodeService {
 					"상세코드가 남아 있는 그룹은 삭제할 수 없습니다. 상세코드를 먼저 삭제하세요."
 			);
 		}
-		group.markDeleted();
+		group.markDeleted(actor);
 		codeGroupRepository.saveAndFlush(group);
 	}
 
@@ -190,8 +204,10 @@ public class CommonCodeService {
 	@Transactional
 	public CodeDetailResponse updateDetail(
 			String codeId,
-			UpdateCodeDetailRequest request
+			UpdateCodeDetailRequest request,
+			String adminUsername
 	) {
+		String actor = normalizeAdminUsername(adminUsername);
 		if (request == null || isBlank(request.detailCodeName())) {
 			throw BusinessError.badRequest(
 					"DETAIL_CODE_NAME_REQUIRED",
@@ -208,15 +224,17 @@ public class CommonCodeService {
 				request.sortOrder(),
 				request.extra1(),
 				request.extra2(),
-				request.extra3()
+				request.extra3(),
+				actor
 		);
 		return CodeDetailResponse.from(codeDetailRepository.saveAndFlush(detail));
 	}
 
 	@Transactional
-	public void deleteDetail(String codeId) {
+	public void deleteDetail(String codeId, String adminUsername) {
+		String actor = normalizeAdminUsername(adminUsername);
 		CodeDetail detail = findActiveDetail(codeId);
-		detail.markDeleted();
+		detail.markDeleted(actor);
 		codeDetailRepository.saveAndFlush(detail);
 	}
 
@@ -236,6 +254,25 @@ public class CommonCodeService {
 						"CODE_DETAIL_NOT_FOUND",
 						"등록된 상세코드를 찾을 수 없습니다."
 				));
+	}
+
+	/**
+	 * X-Admin-Username 헤더 값을 regist_user_id / update_user_id 에 넣을 형태로 만든다.
+	 * 헤더가 없거나 비어 있으면 null(누가 바꿨는지 모름). 컬럼 길이(100)를 넘으면 거부한다.
+	 * core backend에는 인증이 없어 이 값은 호출자가 주장하는 이름일 뿐이다.
+	 */
+	private String normalizeAdminUsername(String adminUsername) {
+		if (isBlank(adminUsername)) {
+			return null;
+		}
+		String trimmed = adminUsername.trim();
+		if (trimmed.length() > ADMIN_USERNAME_MAX_LENGTH) {
+			throw BusinessError.badRequest(
+					"ADMIN_USERNAME_TOO_LONG",
+					"변경자 이름은 " + ADMIN_USERNAME_MAX_LENGTH + "자를 넘을 수 없습니다."
+			);
+		}
+		return trimmed;
 	}
 
 	private void requireUseYnAndSortOrder(Boolean useYn, Integer sortOrder) {

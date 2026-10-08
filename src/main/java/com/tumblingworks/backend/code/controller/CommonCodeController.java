@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +28,12 @@ import java.util.List;
 @RequestMapping("/api/codes")
 public class CommonCodeController {
 
+	/**
+	 * 등록·수정·삭제한 사람(관리자 콘솔의 관리자 아이디). regist_user_id / update_user_id 에 저장된다.
+	 * 선택 헤더이며, core backend에 인증이 없어 값을 검증하지 않는다.
+	 */
+	public static final String ADMIN_USERNAME_HEADER = "X-Admin-Username";
+
 	private final CommonCodeService commonCodeService;
 
 	public CommonCodeController(CommonCodeService commonCodeService) {
@@ -37,9 +44,10 @@ public class CommonCodeController {
 	@PostMapping("/groups")
 	@ResponseStatus(HttpStatus.CREATED)
 	public CodeGroupResponse createGroup(
-			@RequestBody(required = false) CreateCodeGroupRequest request
+			@RequestBody(required = false) CreateCodeGroupRequest request,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
 	) {
-		return commonCodeService.createGroup(request);
+		return commonCodeService.createGroup(request, adminUsername);
 	}
 
 	@Operation(summary = "List code groups")
@@ -58,16 +66,20 @@ public class CommonCodeController {
 	@PutMapping("/groups/{groupId}")
 	public CodeGroupResponse updateGroup(
 			@PathVariable String groupId,
-			@RequestBody(required = false) UpdateCodeGroupRequest request
+			@RequestBody(required = false) UpdateCodeGroupRequest request,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
 	) {
-		return commonCodeService.updateGroup(groupId, request);
+		return commonCodeService.updateGroup(groupId, request, adminUsername);
 	}
 
 	@Operation(summary = "Delete a code group")
 	@DeleteMapping("/groups/{groupId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteGroup(@PathVariable String groupId) {
-		commonCodeService.deleteGroup(groupId);
+	public void deleteGroup(
+			@PathVariable String groupId,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
+	) {
+		commonCodeService.deleteGroup(groupId, adminUsername);
 	}
 
 	@Operation(summary = "List code details of a group")
@@ -80,9 +92,10 @@ public class CommonCodeController {
 	@PostMapping("/details")
 	@ResponseStatus(HttpStatus.CREATED)
 	public CodeDetailResponse createDetail(
-			@RequestBody(required = false) CreateCodeDetailRequest request
+			@RequestBody(required = false) CreateCodeDetailRequest request,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
 	) {
-		return commonCodeService.createDetail(request);
+		return commonCodeService.createDetail(request, adminUsername);
 	}
 
 	@Operation(summary = "Get a code detail")
@@ -95,15 +108,19 @@ public class CommonCodeController {
 	@PutMapping("/details/{codeId}")
 	public CodeDetailResponse updateDetail(
 			@PathVariable String codeId,
-			@RequestBody(required = false) UpdateCodeDetailRequest request
+			@RequestBody(required = false) UpdateCodeDetailRequest request,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
 	) {
-		return commonCodeService.updateDetail(codeId, request);
+		return commonCodeService.updateDetail(codeId, request, adminUsername);
 	}
 
 	@Operation(summary = "Delete a code detail")
 	@DeleteMapping("/details/{codeId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void deleteDetail(@PathVariable String codeId) {
-		commonCodeService.deleteDetail(codeId);
+	public void deleteDetail(
+			@PathVariable String codeId,
+			@RequestHeader(value = ADMIN_USERNAME_HEADER, required = false) String adminUsername
+	) {
+		commonCodeService.deleteDetail(codeId, adminUsername);
 	}
 }

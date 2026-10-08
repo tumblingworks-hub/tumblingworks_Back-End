@@ -61,10 +61,12 @@ class CommonCodeControllerTests {
 	void updatesCodeGroup() throws Exception {
 		when(commonCodeService.updateGroup(
 				eq("CMGRP1"),
-				eq(new UpdateCodeGroupRequest("상태", "설명", true, 2))
+				eq(new UpdateCodeGroupRequest("상태", "설명", true, 2)),
+				eq("admin")
 		)).thenReturn(groupResponse());
 
 		mockMvc.perform(put("/api/codes/groups/CMGRP1")
+						.header("X-Admin-Username", "admin")
 						.contentType(MediaType.APPLICATION_JSON)
 						.content("""
 								{"groupName":"상태","description":"설명","useYn":true,"sortOrder":2}
@@ -100,7 +102,7 @@ class CommonCodeControllerTests {
 		doThrow(BusinessError.conflict(
 				"CODE_GROUP_HAS_DETAILS",
 				"상세코드가 남아 있는 그룹은 삭제할 수 없습니다. 상세코드를 먼저 삭제하세요."
-		)).when(commonCodeService).deleteGroup("CMGRP1");
+		)).when(commonCodeService).deleteGroup("CMGRP1", null);
 
 		mockMvc.perform(delete("/api/codes/groups/CMGRP1"))
 				.andExpect(status().isConflict())
@@ -112,7 +114,7 @@ class CommonCodeControllerTests {
 		mockMvc.perform(delete("/api/codes/details/CMDTL1"))
 				.andExpect(status().isNoContent());
 
-		verify(commonCodeService).deleteDetail("CMDTL1");
+		verify(commonCodeService).deleteDetail("CMDTL1", null);
 	}
 
 	@Test
@@ -136,7 +138,9 @@ class CommonCodeControllerTests {
 				true,
 				0,
 				NOW,
-				NOW
+				"admin",
+				NOW,
+				"admin"
 		);
 	}
 }

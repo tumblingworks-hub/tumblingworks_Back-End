@@ -12,7 +12,9 @@ public record CodeGroupResponse(
 		boolean useYn,
 		int sortOrder,
 		LocalDateTime registeredAt,
-		LocalDateTime updatedAt
+		String registeredUserId,
+		LocalDateTime updatedAt,
+		String updatedUserId
 ) {
 
 	public static CodeGroupResponse from(CodeGroup group) {
@@ -24,7 +26,9 @@ public record CodeGroupResponse(
 				group.isUseYn(),
 				group.getSortOrder(),
 				group.getRegisteredAt(),
-				group.getUpdatedAt()
+				group.getRegisteredUserId(),
+				group.getUpdatedAt(),
+				group.getUpdatedUserId()
 		);
 	}
 }

@@ -95,6 +95,11 @@ public class CodeDetail {
 		return new CodeDetail(group, detailCode, detailCodeName, description);
 	}
 
+	public void recordRegisteredBy(String userId) {
+		this.registeredUserId = userId;
+		this.updatedUserId = userId;
+	}
+
 	public void update(
 			String detailCodeName,
 			String description,
@@ -102,7 +107,8 @@ public class CodeDetail {
 			int sortOrder,
 			String extra1,
 			String extra2,
-			String extra3
+			String extra3,
+			String updatedUserId
 	) {
 		this.detailCodeName = detailCodeName;
 		this.description = description;
@@ -111,10 +117,12 @@ public class CodeDetail {
 		this.extra1 = extra1;
 		this.extra2 = extra2;
 		this.extra3 = extra3;
+		this.updatedUserId = updatedUserId;
 	}
 
-	public void markDeleted() {
+	public void markDeleted(String updatedUserId) {
 		this.deletedFlag = DeletedFlag.DELETED;
+		this.updatedUserId = updatedUserId;
 	}
 
 	@PreUpdate
@@ -168,6 +176,14 @@ public class CodeDetail {
 
 	public LocalDateTime getUpdatedAt() {
 		return updatedAt;
+	}
+
+	public String getRegisteredUserId() {
+		return registeredUserId;
+	}
+
+	public String getUpdatedUserId() {
+		return updatedUserId;
 	}
 
 	public String getDeletedFlag() {

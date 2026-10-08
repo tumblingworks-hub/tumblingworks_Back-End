@@ -16,7 +16,9 @@ public record CodeDetailResponse(
 		String extra2,
 		String extra3,
 		LocalDateTime registeredAt,
-		LocalDateTime updatedAt
+		String registeredUserId,
+		LocalDateTime updatedAt,
+		String updatedUserId
 ) {
 
 	public static CodeDetailResponse from(CodeDetail detail) {
@@ -32,7 +34,9 @@ public record CodeDetailResponse(
 				detail.getExtra2(),
 				detail.getExtra3(),
 				detail.getRegisteredAt(),
-				detail.getUpdatedAt()
+				detail.getRegisteredUserId(),
+				detail.getUpdatedAt(),
+				detail.getUpdatedUserId()
 		);
 	}
 }
