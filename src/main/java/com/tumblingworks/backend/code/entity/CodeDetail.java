@@ -95,6 +95,28 @@ public class CodeDetail {
 		return new CodeDetail(group, detailCode, detailCodeName, description);
 	}
 
+	public void update(
+			String detailCodeName,
+			String description,
+			boolean useYn,
+			int sortOrder,
+			String extra1,
+			String extra2,
+			String extra3
+	) {
+		this.detailCodeName = detailCodeName;
+		this.description = description;
+		this.useYn = useYn;
+		this.sortOrder = sortOrder;
+		this.extra1 = extra1;
+		this.extra2 = extra2;
+		this.extra3 = extra3;
+	}
+
+	public void markDeleted() {
+		this.deletedFlag = DeletedFlag.DELETED;
+	}
+
 	@PreUpdate
 	void updateTimestamp() {
 		this.updatedAt = LocalDateTime.now();
@@ -114,5 +136,41 @@ public class CodeDetail {
 
 	public String getDetailCodeName() {
 		return detailCodeName;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public boolean isUseYn() {
+		return useYn;
+	}
+
+	public int getSortOrder() {
+		return sortOrder;
+	}
+
+	public String getExtra1() {
+		return extra1;
+	}
+
+	public String getExtra2() {
+		return extra2;
+	}
+
+	public String getExtra3() {
+		return extra3;
+	}
+
+	public LocalDateTime getRegisteredAt() {
+		return registeredAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public String getDeletedFlag() {
+		return deletedFlag;
 	}
 }

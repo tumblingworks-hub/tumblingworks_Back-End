@@ -72,6 +72,22 @@ public class CodeGroup {
 		return new CodeGroup(groupCode, groupName, description);
 	}
 
+	public void update(
+			String groupName,
+			String description,
+			boolean useYn,
+			int sortOrder
+	) {
+		this.groupName = groupName;
+		this.description = description;
+		this.useYn = useYn;
+		this.sortOrder = sortOrder;
+	}
+
+	public void markDeleted() {
+		this.deletedFlag = DeletedFlag.DELETED;
+	}
+
 	@PreUpdate
 	void updateTimestamp() {
 		this.updatedAt = LocalDateTime.now();
@@ -87,5 +103,29 @@ public class CodeGroup {
 
 	public String getGroupName() {
 		return groupName;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public boolean isUseYn() {
+		return useYn;
+	}
+
+	public int getSortOrder() {
+		return sortOrder;
+	}
+
+	public LocalDateTime getRegisteredAt() {
+		return registeredAt;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public String getDeletedFlag() {
+		return deletedFlag;
 	}
 }
