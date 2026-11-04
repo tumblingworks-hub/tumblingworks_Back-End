@@ -1,0 +1,9 @@
+.gradle
+build
+.idea
+.kotlin
+.git
+config
+*.log
+Dockerfile*
+README.md
