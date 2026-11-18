@@ -12,7 +12,7 @@ description = 'Tumblingworks Back-End API'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(26)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -35,7 +35,7 @@ dependencies {
 }
 
 kotlin {
-	jvmToolchain(26)
+	jvmToolchain(25)
 }
 
 tasks.named('test') {
